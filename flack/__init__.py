@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch()
 import os
 
 from flask import Flask
@@ -41,14 +43,13 @@ def create_app(config_name=None, main=True):
         # additional processes such as Celery workers wanting to access
         # Socket.IO
         socketio.init_app(app,
-                          message_queue=app.config['SOCKETIO_MESSAGE_QUEUE'])
+                          message_queue='zmq+tcp://localhost:5555+5556',
+                          async_mode='eventlet')
     else:
         # Initialize socketio to emit events through through the message queue
         # Note that since Celery does not use eventlet, we have to be explicit
         # in setting the async mode to not use it.
-        socketio.init_app(None,
-                          message_queue=app.config['SOCKETIO_MESSAGE_QUEUE'],
-                          async_mode='threading')
+        SocketIO(message_queue='zmq+tcp://localhost:5555+5556')
     celery.conf.update(config[config_name].CELERY_CONFIG)
 
     # Register web application routes
