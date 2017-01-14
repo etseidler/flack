@@ -20,7 +20,6 @@ def on_ping_user(token):
         g.current_user.ping()
 
 
-@celery.task
 def post_message(user_id, data):
     """Celery task that posts a message."""
     from .wsgi_aux import app
@@ -52,7 +51,7 @@ def on_post_message(data, token):
     """Clients send this event to when the user posts a message."""
     verify_token(token, add_to_session=True)
     if g.current_user:
-        post_message.apply_async(args=(g.current_user.id, data))
+        post_message(g.current_user.id, data)
 
 
 @socketio.on('disconnect')
